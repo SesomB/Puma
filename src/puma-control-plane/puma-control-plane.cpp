@@ -34,6 +34,14 @@ PumaControlPlane::PumaControlPlane()
     }
 }
 
+PumaControlPlane::~PumaControlPlane()
+{
+    for (auto &pumaDataPlane : m_PumaDataPlanes)
+    {
+        delete pumaDataPlane;
+    }
+}
+
 void PumaControlPlane::Run()
 {
     // Start capture in async mode

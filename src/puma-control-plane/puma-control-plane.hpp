@@ -6,6 +6,7 @@
 #include <rte_flow.h>
 class PumaControlPlane
 {
+
   private:
     const int MBUF_POOL_SIZE = 16 * 1024 - 1;
     Configuration m_Configuration;
@@ -15,7 +16,7 @@ class PumaControlPlane
 
   public:
     PumaControlPlane();
-    ~PumaControlPlane(){};
+    ~PumaControlPlane();
 
     void Run();
     void Stop();

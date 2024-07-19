@@ -1,34 +1,36 @@
 #pragma once
 
-#include <thread>
+#include "../configuration/configuration.hpp"
 #include "DpdkDevice.h"
 #include "DpdkDeviceList.h"
-#include "../configuration/configuration.hpp"
-
+#include <rte_mbuf.h>
+#include <thread>
 class PumaDataPlane : public pcpp::DpdkWorkerThread
 {
-private:
-	pcpp::DpdkDevice *m_Device;
-	Configuration& m_Configuration;
-	int m_RxQueueId;
-	bool m_KeepRunning;
-	uint32_t m_CoreId;
+  private:
+    pcpp::DpdkDevice *m_Device;
+    Configuration &m_Configuration;
+    int m_RxQueueId;
+    bool m_KeepRunning;
+    uint32_t m_CoreId;
 
-public:
-	// c'tor
-	PumaDataPlane(Configuration& configuration,pcpp::DpdkDevice *device, int rxQueueId);
+  public:
+    // c'tor
+    PumaDataPlane(Configuration &configuration, pcpp::DpdkDevice *device, int rxQueueId);
 
-	// d'tor (does nothing)
-	~PumaDataPlane() {}
+    // d'tor (does nothing)
+    ~PumaDataPlane()
+    {
+    }
 
-	// implement abstract method
+    // implement abstract method
 
-	// start running the worker thread
-	bool run(uint32_t coreId);
+    // start running the worker thread
+    bool run(uint32_t coreId);
 
-	// ask the worker thread to stop
-	void stop();
+    // ask the worker thread to stop
+    void stop();
 
-	// get worker thread core ID
-	uint32_t getCoreId() const;
+    // get worker thread core ID
+    uint32_t getCoreId() const;
 };
