@@ -1,0 +1,9 @@
+[submodule "lib/PcapPlusPlus"]
+	path = lib/PcapPlusPlus
+	url = https://github.com/seladb/PcapPlusPlus.git
+[submodule "lib/argparse"]
+	path = lib/argparse
+	url = https://github.com/p-ranav/argparse.git
+[submodule "lib/spdlog"]
+	path = lib/spdlog
+	url = https://github.com/gabime/spdlog.git
