@@ -4,7 +4,7 @@ PumaControlPlane::PumaControlPlane()
 {
     // Initialize DPDK
     pcpp::CoreMask coreMaskToUse = pcpp::createCoreMaskFromCoreIds(std::vector<int>{0, 1});
-    pcpp::DpdkDeviceList::initDpdk(coreMaskToUse, MBUF_POOL_SIZE);
+    pcpp::DpdkDeviceList::initDpdk(coreMaskToUse, MBUF_POOL_SIZE,0U,0U,0U,nullptr,"Puma",false);
     // Find DPDK devices
     pcpp::DpdkDevice *device1 = pcpp::DpdkDeviceList::getInstance().getDeviceByPort(0);
     if (device1 == NULL)
