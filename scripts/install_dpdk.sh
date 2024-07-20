@@ -49,6 +49,7 @@ else
     cd build
     ninja
     sudo ninja install
+    sudo ldconfig
 fi
 
 # Load UIO Kernel Module
