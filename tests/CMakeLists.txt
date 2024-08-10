@@ -11,6 +11,7 @@ include_directories(${CMAKE_SOURCE_DIR}/src/common)
 set(SOURCES
     UnitTests/TestTemplate.cpp
     UnitTests/ContiguousLinkedListTest.cpp
+    UnitTests/LinkedArrayTests.cpp
 )
 
 # Add header files
@@ -25,4 +26,5 @@ target_link_libraries("${PROJECT_NAME}" PUBLIC
     gtest
     ContiguousLinkedList
     DPDKAllocator
+    LinkedArray
     )
