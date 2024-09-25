@@ -1,3 +1,4 @@
 add_subdirectory(DPDKAllocator)
 add_subdirectory(ContiguousLinkedList)
 add_subdirectory(LinkedArray)
+add_subdirectory(CLIManager)
