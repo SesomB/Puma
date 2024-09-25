@@ -28,7 +28,11 @@ LogManager::LogManager(bool logToFile) : m_LogToFile(logToFile)
 
 void LogManager::printAllLogs()
 {
-    std::cout << "\nLogs:\n";
+    std::string headline = "\nLogManager Logs:\n";
+    std::cout << headline;
+    std::string underline(headline.length() - 2, '-');
+    std::cout << underline << std::endl;
+
     int index = 1;
     for (const auto &log : m_AggregatedLogs)
     {
@@ -52,6 +56,9 @@ void LogManager::Log(const std::string &msg, spdlog::level::level_enum log_level
         break;
     case spdlog::level::err:
         m_Logger->error(msg);
+        break;
+    case spdlog::level::trace:
+        m_Logger->trace(msg);
         break;
 
     default:
