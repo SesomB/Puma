@@ -26,7 +26,7 @@ LogManager::LogManager(bool logToFile) : m_LogToFile(logToFile)
     m_AggregatedLogs.push_back(msg);
 };
 
-void LogManager::PrintAllLogs()
+void LogManager::printAllLogs()
 {
     std::cout << "\nLogs:\n";
     int index = 1;
@@ -37,7 +37,7 @@ void LogManager::PrintAllLogs()
     }
 };
 
-void LogManager::Log(const std::string msg, spdlog::level::level_enum log_level)
+void LogManager::Log(const std::string &msg, spdlog::level::level_enum log_level)
 {
     switch (log_level)
     {
@@ -61,7 +61,7 @@ void LogManager::Log(const std::string msg, spdlog::level::level_enum log_level)
     m_AggregatedLogs.push_back(msg);
 };
 
-void LogManager::Run()
+void LogManager::generateMockedLogs()
 {
     // Generate some mocked logs for testing purposes
     Log("Starting Log Manager.", spdlog::level::info);

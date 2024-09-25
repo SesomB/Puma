@@ -19,15 +19,21 @@ private:
 
 public:
     LogManager(bool logToFile = false);
+    ~LogManager() {};
 
-    void PrintAllLogs();
+    void printAllLogs();
 
-    /// @brief  Helper method to log messages and aggregate them into a vector
-    void Log(const std::string msg, spdlog::level::level_enum log_level);
+    void setLogLevel(spdlog::level::level_enum log_level) { m_Logger->set_level(log_level); };
+
+    /// @brief Helper method to log messages and aggregate them into a vector
+    void Log(const std::string &msg, spdlog::level::level_enum log_level);
 
     /// @brief Run method to create mock logs
-    void Run();
+    void generateMockedLogs();
 
     /// @brief Retrieve all aggregated logs.
     const std::vector<std::string> getAllLogs() const { return m_AggregatedLogs; }
+
+    /// @brief Return LogManager logger pointer reference
+    std::shared_ptr<spdlog::logger> getLoggerReference() const { return m_Logger; }
 };
