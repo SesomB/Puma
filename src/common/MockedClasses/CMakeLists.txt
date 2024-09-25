@@ -3,11 +3,13 @@ cmake_minimum_required(VERSION 3.12)
 # Add source files
 set(SOURCES
     LogManager.cpp
+    SystemMetrics.cpp
 )
 
 # Add header files
 set(HEADERS
     LogManager.hpp
+    SystemMetrics.hpp
 )
 
 # Create the library
