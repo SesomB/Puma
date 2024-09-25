@@ -10,3 +10,6 @@
 [submodule "lib/googletest"]
 	path = lib/googletest
 	url = https://github.com/google/googletest.git
+[submodule "lib/cli"]
+	path = lib/cli
+	url = https://github.com/daniele77/cli.git
