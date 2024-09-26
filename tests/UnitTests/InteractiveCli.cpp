@@ -1,4 +1,5 @@
 #include <exception>
+#include <cstdlib>
 #include "gtest/gtest.h"
 #include "CLIManager/CLIManager.hpp"
 #include "MockedClasses/LogManager.hpp"
@@ -6,6 +7,32 @@
 
 const std::string ROOT_MENU_NAME = "PumaMain";
 const std::string ROOT_MENU_DESCRIPTION = "Puma Interactive CLI Main Menu.";
+
+// Test method to run system scripts
+std::string runScript(const std::string &scriptPath)
+{
+    std::string command = "bash \"" + scriptPath + "\"";
+
+    // Open a pipe to the command
+    std::array<char, 128> buffer;
+    std::string result;
+
+    // Use popen to execute the command
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(command.c_str(), "r"), pclose);
+    if (!pipe)
+    {
+        throw std::runtime_error("popen() failed!");
+    }
+
+    // Read the output from the script
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr)
+    {
+        result += buffer.data();    // Append to the result string
+        std::cout << buffer.data(); // Print each line to stdout
+    }
+
+    return result; // Return the full output as a string
+}
 
 TEST(InteractiveCli, example)
 {
@@ -38,6 +65,16 @@ TEST(InteractiveCli, example)
 
     // Add nested menu
     cliManager.addMenu("metrics", "NestedMenu", "Test Add Menu Heirarchy.");
+
+    // Add menu for control scripts
+    std::string initDpdk = "/home/dev/Dev/Puma/scripts/dpdk_init.sh";
+    std::string configureHugepages = "/home/dev/Dev/Puma/scripts/configure_hugepages.sh";
+    cliManager.addMenu(ROOT_MENU_NAME, "scripts", "System Control Scripts.");
+    auto scriptMenu = cliManager.getMenuReference("scripts");
+    scriptMenu->Insert("init", [this, initDpdk](std::ostream &out)
+                       { runScript(initDpdk); }, "Initializes DPDK.");
+    scriptMenu->Insert("huge_pages", [this, configureHugepages](std::ostream &out)
+                       { runScript(configureHugepages); }, "Configures DPDK Memory Huge Pages.");
 
     // Run CLI App
     cliManager.startCLI();
