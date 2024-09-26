@@ -1,28 +1,47 @@
 #include "CLIManager.hpp"
 
-CLIManager::CLIManager()
+CLIManager::CLIManager(const std::string &rootMenuName, const std::string &rootMenuDescription)
 {
-    // Initialize root menu
-    m_RootMenu = std::make_unique<cli::Menu>("cli");
+    // Initialize CLI root menu
+    m_RootMenu = std::make_unique<cli::Menu>(rootMenuName, rootMenuDescription);
+    m_Menus[rootMenuName] = m_RootMenu.get();
+};
 
-    // Setup commends
-    SetupCommands();
-
-    // Initialzie CLI
-    m_Cli = std::make_unique<cli::Cli>(std::move(m_RootMenu));
-}
-
-void CLIManager::SetupCommands()
+void CLIManager::addMenu(const std::string &parentMenuName, const std::string &newMenuName, const std::string &description)
 {
-    m_RootMenu->Insert("Hello", [](std::ostream &out)
-                       { out << "Hello World Test\n"; }, "Print Hello World");
-    m_RootMenu->Insert("Exit", [](std::ostream &out)
-                       { out << "Exiting...\n"; std::exit(0); }, "Exit Interactive Cli");
-}
+    cli::Menu *parentMenu = findMenu(parentMenuName);
+    if (parentMenu == nullptr)
+    {
+        // Default to root menu if not found
+        parentMenu = m_RootMenu.get();
+    }
 
-void CLIManager::Start()
+    // Create and add the new sub menu
+    auto newMenu = std::make_unique<cli::Menu>(newMenuName, description);
+    m_Menus[newMenuName] = newMenu.get();
+    parentMenu->Insert(std::move(newMenu));
+};
+
+void CLIManager::startCLI()
 {
-    // Create a CLI sesssion and start it
-    cli::CliFileSession inputCli(*m_Cli, std::cin, std::cout);
-    inputCli.Start();
-}
+    // Create the CLI app
+    m_CliApp = std::make_unique<cli::Cli>(std::move(m_RootMenu));
+    if (!m_CliApp)
+    {
+        throw std::runtime_error("CLI App is not initialized.");
+    }
+    m_CliApp->EnterAction([](std::ostream &out)
+                          { out << "Welcome to Puma Interactive CLI\n"; });
+    m_CliApp->ExitAction([](std::ostream &out)
+                         { out << "Exiting CLI...\n"; });
+
+    // Create and start the CLI session
+    cli::CliFileSession inputSession(*m_CliApp);
+    inputSession.Start();
+};
+
+cli::Menu *CLIManager::findMenu(const std::string &name)
+{
+    auto it = m_Menus.find(name);
+    return (it != m_Menus.end()) ? it->second : nullptr;
+};
