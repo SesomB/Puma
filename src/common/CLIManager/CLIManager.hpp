@@ -43,6 +43,11 @@ public:
         }
     };
 
+    cli::Menu *getMenuReference(const std::string &name)
+    {
+        return findMenu(name);
+    };
+
     /// @brief Starts the CLI application
     void startCLI();
 
