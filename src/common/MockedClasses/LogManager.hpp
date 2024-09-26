@@ -21,7 +21,7 @@ public:
     LogManager(bool logToFile = false);
     ~LogManager() {};
 
-    void printAllLogs();
+    std::string printAllLogs();
 
     void setLogLevel(spdlog::level::level_enum log_level) { m_Logger->set_level(log_level); };
 
