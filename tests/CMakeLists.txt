@@ -12,6 +12,7 @@ set(SOURCES
     UnitTests/TestTemplate.cpp
     UnitTests/ContiguousLinkedListTest.cpp
     UnitTests/LinkedArrayTests.cpp
+    UnitTests/RandomGeneratorTest.cpp
 )
 
 # Add header files
@@ -27,4 +28,5 @@ target_link_libraries("${PROJECT_NAME}" PUBLIC
     ContiguousLinkedList
     DPDKAllocator
     LinkedArray
+    CustomPacket
     )
