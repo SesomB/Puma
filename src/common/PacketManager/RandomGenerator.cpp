@@ -45,32 +45,14 @@ uint16_t RandomGenerator::generateRandomPort()
     return dist(m_RandomNumGenerator);
 };
 
-std::vector<uint8_t> RandomGenerator::generateRandomPayload(size_t size)
+std::string RandomGenerator::generateRandomPayload(size_t size)
 {
-    std::uniform_int_distribution<> dist(0, 255);
-    std::vector<uint8_t> payload(size);
+    const std::string characters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    std::uniform_int_distribution<size_t> dist(0, characters.size() - 1);
+    std::string payload;
     for (size_t i = 0; i < size; i++)
     {
-        payload[i] = dist(m_RandomNumGenerator);
+        payload += characters[dist(m_RandomNumGenerator)];
     }
     return payload;
-};
-
-std::string RandomGenerator::payloadToString(const std::vector<uint8_t> &payload)
-{
-    std::string result;
-    for (auto byte : payload)
-    {
-        // Convert using ASCII values
-        if (byte >= 32 && byte <= 126)
-        {
-            result += static_cast<char>(byte);
-        }
-        // For non-printable characters
-        else
-        {
-            result += '.';
-        }
-    }
-    return result;
 };

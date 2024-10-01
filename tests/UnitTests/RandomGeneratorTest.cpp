@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 #include "spdlog/spdlog.h"
-#include "CustomPacket/RandomGenerator.hpp"
+#include "PacketManager/RandomGenerator.hpp"
 
 TEST(RandomGeneratorTest, example)
 {
@@ -20,10 +20,10 @@ TEST(RandomGeneratorTest, example)
     spdlog::info("Random Destination Port: {}", RandomGenerator().generateRandomPort());
 
     // Test Random Payload
-    std::vector<uint8_t> payload = RandomGenerator().generateRandomPayload(50);
-    std::string payloadStr = RandomGenerator().payloadToString(payload);
-    spdlog::info("Random Payload {} | Length {}", payloadStr, payloadStr.size());
-    std::vector<uint8_t> payload1 = RandomGenerator().generateRandomPayload(100);
-    std::string payload1Str = RandomGenerator().payloadToString(payload1);
-    spdlog::info("Random Payload {} | Length {}", payload1Str, payload1Str.size());
+    std::string payload = RandomGenerator().generateRandomPayload(50);
+    spdlog::info("Random Payload {} | Length {}", payload, payload.size());
+    std::string payload1 = RandomGenerator().generateRandomPayload(100);
+    spdlog::info("Random Payload {} | Length {}", payload1, payload1.size());
+    std::string payload2 = RandomGenerator().generateRandomPayload(400);
+    spdlog::info("Random Payload {} | Length {}", payload2, payload2.size());
 }

@@ -20,6 +20,5 @@ public:
     pcpp::MacAddress generateRandomMac();
     std::string generateRandomIP(bool isIPv6 = false);
     uint16_t generateRandomPort();
-    std::vector<uint8_t> generateRandomPayload(size_t size);
-    std::string payloadToString(const std::vector<uint8_t> &payload);
+    std::string generateRandomPayload(size_t size);
 };
