@@ -2,7 +2,7 @@
 
 RandomGenerator::RandomGenerator() : m_RandomNumGenerator(m_RandomDevice()) {};
 
-pcpp::MacAddress RandomGenerator::generateRandomMac()
+std::string RandomGenerator::generateRandomMac()
 {
     std::uniform_int_distribution<> dist(0, 255);
     std::stringstream ss;
@@ -12,7 +12,7 @@ pcpp::MacAddress RandomGenerator::generateRandomMac()
         if (i != 5)
             ss << ":";
     }
-    return pcpp::MacAddress(ss.str());
+    return ss.str();
 };
 
 std::string RandomGenerator::generateRandomIP(bool isIPv6)

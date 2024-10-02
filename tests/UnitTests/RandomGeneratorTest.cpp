@@ -6,8 +6,8 @@ TEST(RandomGeneratorTest, example)
 {
 
     // Test Random MAC
-    spdlog::info("Random Source MAC: {}", RandomGenerator().generateRandomMac().toString());
-    spdlog::info("Random Destination MAC: {}", RandomGenerator().generateRandomMac().toString());
+    spdlog::info("Random Source MAC: {}", RandomGenerator().generateRandomMac());
+    spdlog::info("Random Destination MAC: {}", RandomGenerator().generateRandomMac());
 
     // Test Random IPs
     spdlog::info("Random Source IPv4: {}", RandomGenerator().generateRandomIP(false));

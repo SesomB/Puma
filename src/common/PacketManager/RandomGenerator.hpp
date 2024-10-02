@@ -1,6 +1,5 @@
 #pragma once
 
-#include <MacAddress.h>
 #include <random>
 #include <vector>
 #include <string>
@@ -17,7 +16,7 @@ public:
     RandomGenerator();
     ~RandomGenerator() = default;
 
-    pcpp::MacAddress generateRandomMac();
+    std::string generateRandomMac();
     std::string generateRandomIP(bool isIPv6 = false);
     uint16_t generateRandomPort();
     std::string generateRandomPayload(size_t size);
