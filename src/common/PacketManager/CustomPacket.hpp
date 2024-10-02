@@ -32,6 +32,8 @@ public:
     CustomPacket() {};
     ~CustomPacket() = default;
 
+    void reset() { m_Packet = pcpp::Packet(); };
+
     /// @brief Adds an Ethernet layer with source and destination MAC Addresses
     void addEthernetLayer(const std::optional<std::string> &srcMac = std::nullopt, const std::optional<std::string> &dstMac = std::nullopt);
 

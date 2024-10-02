@@ -10,7 +10,7 @@ void CustomPacket::addEthernetLayer(const std::optional<std::string> &srcMac, co
     }
     else
     {
-        sourceMac = m_RandomGen.generateRandomMac();
+        sourceMac = pcpp::MacAddress(m_RandomGen.generateRandomMac());
     }
 
     // Handle Destination MAC
@@ -21,7 +21,7 @@ void CustomPacket::addEthernetLayer(const std::optional<std::string> &srcMac, co
     }
     else
     {
-        destinationMac = m_RandomGen.generateRandomMac();
+        destinationMac = pcpp::MacAddress(m_RandomGen.generateRandomMac());
     }
 
     // Create and add layer
@@ -152,7 +152,7 @@ void CustomPacket::addPayloadLayer(const std::optional<std::string> &payload, st
     }
     else
     {
-        std::string randomPayload = m_RandomGen.generateRandomPayload(size.value());
+        std::string randomPayload = m_RandomGen.generateRandomPayload();
         payloadData.assign(randomPayload.begin(), randomPayload.end());
     }
 
