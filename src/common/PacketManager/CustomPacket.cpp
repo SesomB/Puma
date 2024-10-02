@@ -165,23 +165,3 @@ void CustomPacket::buildPacket()
 {
     m_Packet.computeCalculateFields();
 };
-
-std::string CustomPacket::_payloadToString(const std::vector<uint8_t> &payload)
-{
-    // TODO - move to PacketParser
-    std::string result;
-    for (auto byte : payload)
-    {
-        // Convert using ASCII values
-        if (byte >= 32 && byte <= 126)
-        {
-            result += static_cast<char>(byte);
-        }
-        // For non-printable characters
-        else
-        {
-            result += '.';
-        }
-    }
-    return result;
-};

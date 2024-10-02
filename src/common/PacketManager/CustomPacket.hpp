@@ -50,7 +50,4 @@ public:
     void buildPacket();
 
     const pcpp::Packet &getPacket() const { return m_Packet; };
-
-private:
-    std::string _payloadToString(const std::vector<uint8_t> &payload);
 };
