@@ -12,6 +12,8 @@ set(SOURCES
     UnitTests/TestTemplate.cpp
     UnitTests/ContiguousLinkedListTest.cpp
     UnitTests/LinkedArrayTests.cpp
+    UnitTests/InteractiveCli.cpp
+    
 )
 
 # Add header files
@@ -24,7 +26,10 @@ add_executable("${PROJECT_NAME}" "${SOURCES}" "${HEADERS}" main.cpp)
 
 target_link_libraries("${PROJECT_NAME}" PUBLIC 
     gtest
+    cli
     ContiguousLinkedList
     DPDKAllocator
     LinkedArray
+    CLIManager
+    MockedClasses
     )
