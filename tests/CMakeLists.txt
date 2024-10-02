@@ -13,6 +13,8 @@ set(SOURCES
     UnitTests/ContiguousLinkedListTest.cpp
     UnitTests/LinkedArrayTests.cpp
     UnitTests/RandomGeneratorTest.cpp
+    UnitTests/CustomPacketTest.cpp
+    UnitTests/PcapManagerTest.cpp
 )
 
 # Add header files
@@ -28,5 +30,6 @@ target_link_libraries("${PROJECT_NAME}" PUBLIC
     ContiguousLinkedList
     DPDKAllocator
     LinkedArray
-    CustomPacket
+    PacketManager
+    PcapManager
     )
