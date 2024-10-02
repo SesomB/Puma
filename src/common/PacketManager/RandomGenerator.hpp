@@ -19,5 +19,5 @@ public:
     std::string generateRandomMac();
     std::string generateRandomIP(bool isIPv6 = false);
     uint16_t generateRandomPort();
-    std::string generateRandomPayload(size_t size);
+    std::string generateRandomPayload(size_t size = 50);
 };
