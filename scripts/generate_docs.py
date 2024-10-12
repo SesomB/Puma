@@ -32,12 +32,11 @@ class Constants:
 
 class DoxygenConfigs:
 
-    INPUT_DIRS="src"
     README_PATH = "README.md"
+    INPUT_DIRS=f"src {README_PATH}"
     DOXYFILE_CONFIGS = {
         "PROJECT_NAME": {"My Project": Constants.NAME_PROJECT},
-        "PROJECT_LOGO": {"=": f"= {Constants.PATH_LOGO_HTML}"},
-        # "HTML_HEADER": {"=": f"= {Constants.PATH_HTML_HEADER}"},
+        "PROJECT_LOGO": {"=": f"= {path.join(Constants.DIR_DOCS, Constants.NAME_LOGO)}"},
         "INPUT": {"=": f"= {INPUT_DIRS}"},
         "OUTPUT_DIRECTORY": {"=": f"= {Constants.DIR_DOCS}"},
         "RECURSIVE": {"NO": "YES"},
@@ -46,14 +45,6 @@ class DoxygenConfigs:
         "GENERATE_HTML": {"NO": "YES"},
         "USE_MDFILE_AS_MAINPAGE": {"=": f"= {README_PATH}"}
     }
-
-
-    HTML_HEADER = f"""
-    <div style="display: flex; align-items: center;">
-        <img src={Constants.PATH_ASSETS_DOCS} alt="Logo" style="height: 50px; margin-right: 10px;">
-        <h1>{Constants.NAME_PROJECT}</h1>
-    </div>
-    """
 
 
 def run_bash_command(cmd: str, show_output: bool=False) -> None:
@@ -130,10 +121,9 @@ def main() -> None:
     # Validate directories
     makedirs(Constants.DIR_DOCS, exist_ok=True)
     makedirs(Constants.PATH_HTML, exist_ok=True)
-    makedirs(Constants.PATH_ASSETS_DOCS, exist_ok=True)
 
-    # Copt needed assets
-    run_bash_command(f"cp -r {Constants.PATH_ASSETS_DOCS} {Constants.PATH_HTML}")
+    # # Copy needed assets
+    run_bash_command(f"cp {Constants.PATH_LOGO_DOCS} {Constants.DIR_DOCS}", show_output=True)
 
     # Create Doxygen configuration file if not already present
     if not path.exists(Constants.PATH_DOXYFILE):
@@ -144,8 +134,6 @@ def main() -> None:
 
     # Configure Doxyfile
     edit_file_lines(Constants.PATH_DOXYFILE, DoxygenConfigs.DOXYFILE_CONFIGS)
-    # with open(HTML_HEADER_PATH, 'w') as f:
-    #     f.write(HTML_HEADER)
 
     # Generate Doxygen documentation
     print(f"{Constants.IF_PREFIX} Generating documentation for {Constants.NAME_PROJECT}...")
