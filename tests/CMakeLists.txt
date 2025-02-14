@@ -13,6 +13,7 @@ set(SOURCES
     UnitTests/ContiguousLinkedListTest.cpp
     UnitTests/LinkedArrayTests.cpp
     UnitTests/InteractiveCli.cpp
+    UnitTests/HyperScanPOC.cpp
     
 )
 
@@ -32,4 +33,5 @@ target_link_libraries("${PROJECT_NAME}" PUBLIC
     LinkedArray
     CLIManager
     MockedClasses
+    hs
     )
