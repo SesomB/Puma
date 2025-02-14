@@ -1,136 +1,154 @@
-#include <hs/hs.h>
-#include "gtest/gtest.h"
 #include "spdlog/spdlog.h"
-
+#include "gtest/gtest.h"
 #include <hs/hs.h>
-#include <vector>
-#include <string>
+
 #include <bitset>
 #include <cstring>
-
-#include <iostream>
-#include <unordered_map>
+#include <hs/hs.h>
+#include <hs/hs_common.h>
+#include <hs/hs_runtime.h>
+#include <new>
+#include <rte_common.h>
+#include <rte_malloc.h>
+#include <string>
+#include <vector>
 
 #define MAX_RULES 256
 
-struct sProcessedRule
+using PatternId = std::pair<uint16_t, uint16_t>;
+
+class RegexPattern
 {
-    uint16_t ruleId;
-    uint16_t ruleIndex;
+  public:
+    std::string mRegexPattern;
+    uint32_t mScanFlags;
+    PatternId mId;
 };
 
-struct sScanResult
+class UserRule
 {
-    bool scanStatus = false;
-    std::bitset<MAX_RULES> matchedRules;
-    std::array<int, MAX_RULES> matchCounts; // For the number of matched patterns per rule
-    /**
-     * Tracks unique (ruleId, ruleIndex) pairs to avoid counting duplicate
-     * matches.
-     * Hyperscan calls the match callback for every occurrence of a pattern, * even if it's the same word appearing multiple times in different
-     * locations.
-     * Without this set, matchCounts[ruleId] would increment for each
-     * occurrence rather than per unique pattern within the rule.
-     */
-    std::set<std::pair<uint16_t, uint16_t>> uniqueMatches;
-    std::vector<sProcessedRule> matchedData;
+  public:
+    std::vector<std::string> mRegexPatterns;
 
-    sScanResult() { memset(matchCounts.data(), 0, sizeof(matchCounts)); }
+    UserRule(const std::vector<std::string> &regex_patterns) : mRegexPatterns(regex_patterns){};
+    ~UserRule() = default;
 };
 
-class HyperscanWrapper
+class HyperCompiler
 {
+  private:
+    static constexpr uint32_t BIAS_COMPILE_FLAGS = HS_FLAG_DOTALL;
 
-private:
-    std::vector<std::string> m_PatternList;
-    std::vector<sProcessedRule> m_Rules;
     hs_database_t *m_Database;
-    hs_scratch_t *m_Scratch;
+    std::vector<RegexPattern> m_RegexPatterns;
 
-public:
-    HyperscanWrapper() : m_Database(nullptr), m_Scratch(nullptr) {}
+  public:
+    HyperCompiler()
+        : m_Database(nullptr){
+              // Set Custom Allocators
+              // hs_set_allocator(DpdkHyperScannerAllocator::dpdk_alloc, DpdkHyperScannerAllocator::dpdk_free);
+          };
 
-    ~HyperscanWrapper()
+    ~HyperCompiler()
     {
-        if (m_Database)
-            hs_free_database(m_Database);
-        if (m_Scratch)
-            hs_free_scratch(m_Scratch);
+        hs_free_database(m_Database);
     }
 
-    void addPattern(uint16_t ruleId, const std::vector<std::string> &patterns)
+    const auto &getDatabase() const
     {
-        for (size_t i = 0; i < patterns.size(); ++i)
+        return m_Database;
+    }
+
+    void addPattern(const RegexPattern &&regex_pattern)
+    {
+        m_RegexPatterns.emplace_back(regex_pattern);
+    }
+
+    bool compile_database()
+    {
+        uint32_t regex_patterns_count = m_RegexPatterns.size();
+
+        std::vector<const char *> patterns(regex_patterns_count);
+        std::vector<uint32_t> flags(regex_patterns_count);
+        std::vector<uint32_t> ids(regex_patterns_count);
+
+        for (int i = 0; i < regex_patterns_count; ++i)
         {
-            m_Rules.push_back({ruleId, static_cast<uint16_t>(i)});
-            m_PatternList.push_back(patterns[i]);
-        }
-    }
+            auto &regex_pattern = m_RegexPatterns[i];
 
-    bool compile()
-    {
+            patterns[i] = regex_pattern.mRegexPattern.c_str();
+            flags[i] = regex_pattern.mScanFlags | BIAS_COMPILE_FLAGS;
+            ids[i] = *reinterpret_cast<uint32_t *>(&regex_pattern.mId);
+        }
+
         hs_compile_error_t *compileErr;
-        std::vector<const char *> cPatterns;
-        std::vector<unsigned int> cFlags(m_PatternList.size(), HS_FLAG_DOTALL);
-        std::vector<unsigned int> ids;
 
-        for (size_t i = 0; i < m_PatternList.size(); ++i)
-        {
-            cPatterns.push_back(m_PatternList[i].c_str());
-            ids.push_back(*reinterpret_cast<const unsigned int *>(&m_Rules[i]));
-        }
-
-        if (hs_compile_multi(cPatterns.data(), cFlags.data(), ids.data(), m_PatternList.size(),
-                             HS_MODE_BLOCK, nullptr, &m_Database, &compileErr) != HS_SUCCESS)
+        if (hs_compile_multi(patterns.data(), flags.data(), ids.data(), regex_patterns_count, HS_MODE_BLOCK, nullptr,
+                             &m_Database, &compileErr) != HS_SUCCESS)
         {
             spdlog::error("Hyperscan compile error: {}", compileErr->message);
-
-            return false;
-        }
-
-        if (hs_alloc_scratch(m_Database, &m_Scratch) != HS_SUCCESS)
-        {
-            spdlog::info("Failed to allocate Hyperscan scratch space");
             return false;
         }
 
         return true;
     }
+};
 
-    sScanResult scan(const std::string &text)
+class HyperScanner
+{
+  private:
+    using uint64_t = unsigned long long;
+
+    const hs_database *const &m_DatabaseRef;
+    hs_scratch_t *m_Scratch;
+    std::bitset<MAX_RULES> m_ResultBitset;
+
+  public:
+    HyperScanner(const hs_database_t *const &database_reference) : m_DatabaseRef(database_reference)
     {
-        sScanResult result;
-        if (!m_Database || !m_Scratch)
-        {
-            spdlog::error("Scan Error.");
-        }
+        auto error_code = hs_alloc_scratch(m_DatabaseRef, &m_Scratch);
 
-        if (hs_scan(m_Database, text.c_str(), text.size(), 0, m_Scratch, _matchHandler, &result) != HS_SUCCESS)
+        if (error_code != HS_SUCCESS)
         {
-            spdlog::error("Scan Error.");
+            spdlog::error("Could not allocate scrath pad: {}", error_code);
+            throw std::bad_alloc();
         }
-
-        return result;
     }
 
-private:
-    static int _matchHandler(unsigned int id, unsigned long long from, unsigned long long to, unsigned int, void *ctx)
+    ~HyperScanner()
     {
-        auto *result = static_cast<sScanResult *>(ctx);
-        const sProcessedRule rule = *reinterpret_cast<sProcessedRule *>(&id);
-        spdlog::info("Match found: Rule ID {} | Pattern Index {}", rule.ruleId, rule.ruleIndex);
+        hs_free_scratch(m_Scratch);
+    }
 
-        // Ensure uniqueness in the matchedRules and matchCounts
-        if (result->uniqueMatches.insert({rule.ruleId, rule.ruleIndex}).second)
+    const auto &getResults() const
+    {
+        return m_ResultBitset;
+    }
+
+    bool scan(const uint8_t *payload, uint32_t payload_size)
+    {
+        static constexpr uint32_t scan_flags = 0;
+
+        if (!m_DatabaseRef)
+            return false;
+
+        if (hs_scan(m_DatabaseRef, reinterpret_cast<const char *>(payload), payload_size, scan_flags, m_Scratch,
+                    _matchHandler, reinterpret_cast<void *>(this)) != HS_SUCCESS)
         {
-            result->matchedRules.set(rule.ruleId);
-            result->matchCounts[rule.ruleId]++;
+            spdlog::error("Scan Error.");
+            return false;
         }
-        if (result->uniqueMatches.find({rule.ruleId, rule.ruleIndex}) != result->uniqueMatches.end())
-        {
-            result->matchedData.push_back(rule);
-        }
-        result->scanStatus = true;
+
+        return true;
+    };
+
+  private:
+    static int _matchHandler(uint32_t id, uint64_t from, uint64_t to, uint32_t flags, void *hyperscanner_ptr)
+    {
+        HyperScanner *current_object = reinterpret_cast<HyperScanner *>(hyperscanner_ptr);
+        const auto &[rule_id, pattern_id_in_rule] = *reinterpret_cast<PatternId *>(&id);
+
+        current_object->m_ResultBitset.set(rule_id);
 
         return 0;
     };
@@ -138,20 +156,34 @@ private:
 
 class HyperScanTest : public ::testing::Test
 {
-protected:
-    HyperscanWrapper hs;
+  protected:
+    std::vector<UserRule> m_UserRules = {
+        UserRule({"hello", "this"}),
+        UserRule({"world", "test"}),
+        UserRule({"example", "string"}),
+        UserRule({"pattern", "search"}),
+        UserRule({"12345", "67890"}),
+        UserRule({R"(\d{3,5})"}),
+        UserRule({"complex_pattern_here", "another_complex"}),
+    };
+
+    HyperCompiler m_Compiler;
 
     void SetUp() override
     {
         // Add patterns for different rule IDs
-        hs.addPattern(1, {"hello", "this"});
-        hs.addPattern(2, {"world", "test"});
-        hs.addPattern(3, {"example", "string"});
-        hs.addPattern(4, {"pattern", "search"});
-        hs.addPattern(5, {"12345", "67890"});
-        hs.addPattern(6, {R"(\d{3,5})"});
-        hs.addPattern(7, {"complex_pattern_here", "another_complex"});
-        ASSERT_TRUE(hs.compile());
+        for (uint16_t rule_id = 0; rule_id < m_UserRules.size(); rule_id++)
+        {
+            for (uint16_t pattern_index_in_rule = 0; pattern_index_in_rule < m_UserRules[rule_id].mRegexPatterns.size();
+                 pattern_index_in_rule++)
+            {
+                auto &user_rule_regex_pattern = m_UserRules[rule_id].mRegexPatterns[pattern_index_in_rule];
+
+                m_Compiler.addPattern(RegexPattern{user_rule_regex_pattern, 0, {rule_id, pattern_index_in_rule}});
+            }
+        }
+
+        ASSERT_TRUE(m_Compiler.compile_database());
     }
 };
 
@@ -159,55 +191,55 @@ TEST_F(HyperScanTest, MatchSinglePattern)
 {
 
     std::string input = "hello world!";
-    auto result = hs.scan(input);
 
-    ASSERT_TRUE(result.scanStatus);
-    EXPECT_TRUE(result.matchedRules.test(1));
-    EXPECT_TRUE(result.matchedRules.test(2));
-    EXPECT_EQ(result.matchCounts[1], 1);
-    EXPECT_EQ(result.matchCounts[2], 1);
+    const uint8_t *input_ptr = reinterpret_cast<const uint8_t *>(input.c_str());
+    const uint32_t input_size = input.size();
+
+    HyperScanner hyperscanner(m_Compiler.getDatabase());
+
+    ASSERT_TRUE(hyperscanner.scan(input_ptr, input_size));
+
+    const auto &results = hyperscanner.getResults();
+
+    EXPECT_TRUE(results.test(0));
+    EXPECT_TRUE(results.test(1));
+    EXPECT_EQ(results.count(), 2);
 };
 
 TEST_F(HyperScanTest, MatchDifferentRules)
 {
     std::string input = "hello world example pattern 12345";
-    auto result = hs.scan(input);
 
-    EXPECT_TRUE(result.scanStatus);
-    EXPECT_TRUE(result.matchedRules.test(1)); // "hello"
-    EXPECT_TRUE(result.matchedRules.test(2)); // "world"
-    EXPECT_TRUE(result.matchedRules.test(3)); // "example"
-    EXPECT_TRUE(result.matchedRules.test(4)); // "pattern"
-    EXPECT_TRUE(result.matchedRules.test(5)); // "12345"
+    const uint8_t *input_ptr = reinterpret_cast<const uint8_t *>(input.c_str());
+    const uint32_t input_size = input.size();
 
-    EXPECT_EQ(result.matchCounts[1], 1); // "hello"
-    EXPECT_EQ(result.matchCounts[2], 1); // "world"
-    EXPECT_EQ(result.matchCounts[3], 1); // "example"
-    EXPECT_EQ(result.matchCounts[4], 1); // "pattern"
-    EXPECT_EQ(result.matchCounts[5], 1); // "12345"
+    HyperScanner hyperscanner(m_Compiler.getDatabase());
 
-    // EXPECT_EQ(result.matchedData.size(), 5); // 5 unique pattern matches
+    ASSERT_TRUE(hyperscanner.scan(input_ptr, input_size));
+
+    const auto &results = hyperscanner.getResults();
+
+    EXPECT_TRUE(results.test(0)); // "hello"
+    EXPECT_TRUE(results.test(1)); // "world"
+    EXPECT_TRUE(results.test(2)); // "example"
+    EXPECT_TRUE(results.test(3)); // "pattern"
+    EXPECT_TRUE(results.test(4)); // "12345"
+
+    EXPECT_EQ(results.count(), 6); // "12345"
 };
 
 TEST_F(HyperScanTest, MatchNoPatterns)
 {
     std::string input = "nothing matched here";
-    auto result = hs.scan(input);
 
-    EXPECT_FALSE(result.matchedRules.test(1)); // Rule 1 should NOT match
-    EXPECT_FALSE(result.matchedRules.test(2)); // Rule 2 should NOT match
-    EXPECT_FALSE(result.matchedRules.test(3)); // Rule 3 should NOT match
-    EXPECT_FALSE(result.matchedRules.test(4)); // Rule 4 should NOT match
-    EXPECT_FALSE(result.matchedRules.test(5)); // Rule 5 should NOT match
-    EXPECT_FALSE(result.matchedRules.test(6)); // Rule 6 should NOT match
-    EXPECT_FALSE(result.matchedRules.test(7)); // Rule 7 should NOT match
+    const uint8_t *input_ptr = reinterpret_cast<const uint8_t *>(input.c_str());
+    const uint32_t input_size = input.size();
 
-    // Verify match counts
-    EXPECT_EQ(result.matchCounts[1], 0); // Rule 1 should match 0 times
-    EXPECT_EQ(result.matchCounts[2], 0); // Rule 2 should match 0 times
-    EXPECT_EQ(result.matchCounts[3], 0); // Rule 3 should match 0 times
-    EXPECT_EQ(result.matchCounts[4], 0); // Rule 4 should match 0 times
-    EXPECT_EQ(result.matchCounts[5], 0); // Rule 5 should match 0 times
+    HyperScanner hyperscanner(m_Compiler.getDatabase());
 
-    EXPECT_EQ(result.matchedData.size(), 0); // No matches
+    ASSERT_TRUE(hyperscanner.scan(input_ptr, input_size));
+
+    const auto &results = hyperscanner.getResults();
+
+    EXPECT_EQ(results.count(), 0);
 };
