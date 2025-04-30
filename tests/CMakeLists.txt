@@ -14,7 +14,7 @@ set(SOURCES
     UnitTests/LinkedArrayTests.cpp
     UnitTests/InteractiveCli.cpp
     UnitTests/HyperScanPOC.cpp
-    
+    UnitTests/DPDKTimer.cpp
 )
 
 # Add header files
@@ -34,4 +34,5 @@ target_link_libraries("${PROJECT_NAME}" PUBLIC
     CLIManager
     MockedClasses
     hs
+    DPDKTimer
     )
