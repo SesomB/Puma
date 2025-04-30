@@ -14,12 +14,13 @@ protected:
     DpdkTimer<3> mTimer;
     std::atomic<int> firedCount = 0;
     std::atomic<bool> isFired = false;
-    std::chrono::steady_clock::time_point startTime;
-    std::chrono::steady_clock::time_point endTime;
+    using Clock = std::chrono::steady_clock;
+    Clock::time_point startTime;
+    Clock::time_point endTime;
 
     void callback()
     {
-        endTime = std::chrono::steady_clock::now();
+        endTime = Clock::now();
         firedCount++;
         isFired = true;
         spdlog::info("Callback executed at end time");
@@ -39,7 +40,7 @@ protected:
     }
 };
 
-TEST_F(DPDKTimerTest, TimerFireAfter3Seconds)
+TEST_F(DPDKTimerTest, TimerResetAndFireAfter3Seconds)
 {
 
     mTimer.startTimer([this]
@@ -62,7 +63,7 @@ TEST_F(DPDKTimerTest, TimerFireAfter3Seconds)
 TEST_F(DPDKTimerTest, TimerFiresApproximatelyAfter3Seconds)
 {
     spdlog::info("Timer TickInterval: {}", mTimer.getTickInterval());
-    startTime = std::chrono::steady_clock::now();
+    startTime = Clock::now();
 
     // Start the timer with the callback
     mTimer.startTimer([this]
