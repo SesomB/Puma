@@ -4,6 +4,7 @@
 #include <thread>
 #include <rte_eal.h>
 #include <rte_timer.h>
+#include <rte_jhash.h>
 
 #include "DPDKTimer/DPDKTimer.hpp"
 
@@ -90,4 +91,36 @@ TEST_F(DPDKTimerTest, TimerFiresApproximatelyAfter3Seconds)
     EXPECT_GE(elapsed, 2900);
     EXPECT_LE(elapsed, 3100);
     EXPECT_EQ(firedCount.load(), 1);
+};
+
+TEST_F(DPDKTimerTest, TcpSessionTimeout)
+{
+    spdlog::info("Starting TCP session timeout simulation");
+
+    // Simulated 5-tuple as a string
+    const std::string fiveTuple = "10.0.0.1:1234-10.0.0.2:80-TCP";
+    uint32_t hash = rte_jhash(fiveTuple.data(), fiveTuple.size(), 0);
+
+    mTimer.startTimer([this]
+                      { callback(); }, rte_lcore_id());
+
+    EXPECT_TRUE(mTimer.isTimerActive());
+
+    // Simulate packet arrivals resetting the timer
+    for (int i = 0; i < 3; ++i)
+    {
+        mTimer.resetTimer(rte_lcore_id());
+        spdlog::info("Simulated packet {} from session hash {}", i + 1, hash);
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        mTimer.manageTimer();
+    }
+
+    // Wait long enough to trigger timeout
+    for (int i = 0; i < 40; ++i)
+    {
+        mTimer.manageTimer();
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    EXPECT_TRUE(isFired);
+    EXPECT_FALSE(mTimer.isTimerActive());
 };
