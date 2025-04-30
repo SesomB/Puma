@@ -19,7 +19,7 @@ using PatternId = std::pair<uint16_t, uint16_t>;
 
 class RegexPattern
 {
-  public:
+public:
     std::string mRegexPattern;
     uint32_t mScanFlags;
     PatternId mId;
@@ -27,24 +27,24 @@ class RegexPattern
 
 class UserRule
 {
-  public:
+public:
     std::vector<std::string> mRegexPatterns;
 
-    UserRule(const std::vector<std::string> &regex_patterns) : mRegexPatterns(regex_patterns){};
+    UserRule(const std::vector<std::string> &regex_patterns) : mRegexPatterns(regex_patterns) {};
     ~UserRule() = default;
 };
 
 class HyperCompiler
 {
-  private:
+private:
     static constexpr uint32_t BIAS_COMPILE_FLAGS = HS_FLAG_DOTALL;
 
     hs_database_t *m_Database;
     std::vector<RegexPattern> m_RegexPatterns;
 
-  public:
+public:
     HyperCompiler()
-        : m_Database(nullptr){
+        : m_Database(nullptr) {
               // Set Custom Allocators
               // hs_set_allocator(DpdkHyperScannerAllocator::dpdk_alloc, DpdkHyperScannerAllocator::dpdk_free);
           };
@@ -96,21 +96,21 @@ class HyperCompiler
 
 class HyperScanner
 {
-  private:
+private:
     using uint64_t = unsigned long long;
 
     const hs_database *const &m_DatabaseRef;
     hs_scratch_t *m_Scratch;
     std::bitset<MAX_RULES> m_ResultBitset;
 
-  public:
+public:
     HyperScanner(const hs_database_t *const &database_reference) : m_DatabaseRef(database_reference)
     {
         auto error_code = hs_alloc_scratch(m_DatabaseRef, &m_Scratch);
 
         if (error_code != HS_SUCCESS)
         {
-            spdlog::error("Could not allocate scrath pad: {}", error_code);
+            spdlog::error("Could not allocate scratch pad: {}", error_code);
             throw std::bad_alloc();
         }
     }
@@ -142,7 +142,7 @@ class HyperScanner
         return true;
     };
 
-  private:
+private:
     static int _matchHandler(uint32_t id, uint64_t from, uint64_t to, uint32_t flags, void *hyperscanner_ptr)
     {
         HyperScanner *current_object = reinterpret_cast<HyperScanner *>(hyperscanner_ptr);
@@ -156,7 +156,7 @@ class HyperScanner
 
 class HyperScanTest : public ::testing::Test
 {
-  protected:
+protected:
     std::vector<UserRule> m_UserRules = {
         UserRule({"hello", "this"}),
         UserRule({"world", "test"}),
