@@ -42,9 +42,12 @@ protected:
 
 TEST_F(DPDKTimerTest, TimerResetAndFireAfter3Seconds)
 {
-
+    isFired = false;
     mTimer.startTimer([this]
                       { callback(); }, rte_lcore_id());
+
+    EXPECT_TRUE(mTimer.isTimerActive());
+    EXPECT_FALSE(mTimer.isTimerPaused());
 
     // Reset the timer 3 times
     for (int i = 0; i < 3; ++i)
@@ -62,12 +65,15 @@ TEST_F(DPDKTimerTest, TimerResetAndFireAfter3Seconds)
 
 TEST_F(DPDKTimerTest, TimerFiresApproximatelyAfter3Seconds)
 {
+    isFired = false;
     spdlog::info("Timer TickInterval: {}", mTimer.getTickInterval());
     startTime = Clock::now();
 
     // Start the timer with the callback
     mTimer.startTimer([this]
                       { callback(); }, rte_lcore_id());
+
+    EXPECT_TRUE(mTimer.isTimerActive());
 
     // Wait for the timer to fire
     while (!isFired.load())

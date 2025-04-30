@@ -17,9 +17,10 @@ private:
     rte_timer m_Timer;
     std::function<void()> m_Callback;
     uint64_t m_TickInterval;
+    uint64_t m_StartTime;
 
 public:
-    DpdkTimer()
+    DpdkTimer() : m_StartTime(0)
     {
 
         rte_timer_init(&m_Timer);
@@ -30,8 +31,14 @@ public:
 
     ~DpdkTimer() = default;
 
-    /// @brief Return the timer tick interval.
+    /// @brief Returns the timer tick interval.
     inline uint64_t getTickInterval() const { return m_TickInterval; }
+
+    /// @brief Returns true if timer is running, false otherwise.
+    inline bool isTimerActive() const { return m_Timer.status.state == RTE_TIMER_PENDING; }
+
+    /// @brief Returns true if timer is paused, false otherwise.
+    inline bool isTimerPaused() const { return m_Timer.status.state == RTE_TIMER_STOP; }
 
     /// @brief Starts the timer.
     void startTimer(std::function<void()> callback, unsigned int coreId)
@@ -43,6 +50,7 @@ public:
 
         // Store the callback function.
         m_Callback = std::move(callback);
+        m_StartTime = rte_get_tsc_cycles();
 
         if (rte_timer_reset(&m_Timer, m_TickInterval, SINGLE, coreId, &DpdkTimer::_onTimeout, this) != 0)
         {
@@ -66,6 +74,16 @@ public:
     void manageTimer()
     {
         rte_timer_manage();
+    }
+
+    /// @brief Returns the elapsed time in cycles since the timer was started or resumed
+    uint64_t getElapsedTime() const
+    {
+        if (!isTimerActive())
+        {
+            return 0;
+        }
+        return rte_get_tsc_cycles() - m_StartTime;
     }
 
 private:
