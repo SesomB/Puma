@@ -12,9 +12,9 @@ set(SOURCES
     UnitTests/TestTemplate.cpp
     UnitTests/ContiguousLinkedListTest.cpp
     UnitTests/LinkedArrayTests.cpp
-    UnitTests/InteractiveCli.cpp
-    UnitTests/HyperScanPOC.cpp
-    UnitTests/DPDKTimer.cpp
+    UnitTests/InteractiveCliTest.cpp
+    UnitTests/HyperScanTest.cpp
+    UnitTests/DPDKTimerTest.cpp
 )
 
 # Add header files
