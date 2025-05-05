@@ -15,6 +15,7 @@ set(SOURCES
     UnitTests/InteractiveCliTest.cpp
     UnitTests/HyperScanTest.cpp
     UnitTests/DPDKTimerTest.cpp
+    UnitTests/Playground.cpp
 )
 
 # Add header files
@@ -35,4 +36,5 @@ target_link_libraries("${PROJECT_NAME}" PUBLIC
     MockedClasses
     hs
     DPDKTimer
+    SessionHandler
     )
