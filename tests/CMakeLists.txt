@@ -14,6 +14,7 @@ set(SOURCES
     UnitTests/LinkedArrayTests.cpp
     UnitTests/InteractiveCli.cpp
     UnitTests/HyperScanPOC.cpp
+    UnitTests/HyperScanVector.cpp
     UnitTests/DPDKTimer.cpp
 )
 
