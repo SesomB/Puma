@@ -34,7 +34,7 @@ std::string runScript(const std::string &scriptPath)
     return result; // Return the full output as a string
 }
 
-TEST(InteractiveCli, example)
+TEST(InteractiveCliTest, example)
 {
 
     // Create LogManger class with some mocked logs

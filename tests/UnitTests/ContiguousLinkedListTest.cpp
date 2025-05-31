@@ -31,31 +31,31 @@ TEST(ContiguousLinkedListTest, stl_allocated)
 
 TEST(ContiguousLinkedListTest, dpdk_allocated)
 {
-    // ContiguousLinkedList<int, DPDKAllocator<int>> list(10);
+    ContiguousLinkedList<int, DPDKAllocator<int>> list(10);
 
-    // list.push_back(1);
-    // list.push_back(2);
-    // list.push_back(3);
-    // list.push_front(0);
+    list.push_back(1);
+    list.push_back(2);
+    list.push_back(3);
+    list.push_front(0);
 
-    // std::cout << "List after push operations: ";
-    // list.print_list();
+    std::cout << "List after push operations: ";
+    list.print_list();
 
-    // list.pop_front();
-    // list.pop_back();
+    list.pop_front();
+    list.pop_back();
 
-    // std::cout << "List after pop operations: ";
-    // list.print_list();
+    std::cout << "List after pop operations: ";
+    list.print_list();
 
-    // auto it = list.begin();
-    // ++it;
-    // list.insert(it, 42);
+    auto it = list.begin();
+    ++it;
+    list.insert(it, 42);
 
-    // std::cout << "List after insertion: ";
-    // list.print_list();
+    std::cout << "List after insertion: ";
+    list.print_list();
 
-    // list.erase(it);
+    list.erase(it);
 
-    // std::cout << "List after erasure: ";
-    // list.print_list();
+    std::cout << "List after erasure: ";
+    list.print_list();
 }

@@ -16,6 +16,9 @@ set(SOURCES
     UnitTests/HyperScanPOC.cpp
     UnitTests/HyperScanVector.cpp
     UnitTests/DPDKTimer.cpp
+    UnitTests/InteractiveCliTest.cpp
+    UnitTests/HyperScanTest.cpp
+    UnitTests/DPDKTimerTest.cpp
 )
 
 # Add header files
